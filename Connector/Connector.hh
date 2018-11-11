@@ -10,7 +10,7 @@
 class EventLoop;
 
 
-class Connector
+class Connector : public std::enable_shared_from_this<Connector>
 {
 public:
   typedef std::function<void (int sockfd)> NewConnectionCallback;
@@ -29,18 +29,26 @@ public:
 private:
   const Connector operator=(const Connector&);
   Connector(const Connector&);
-  
+
   enum States { kDisconnected, kConnecting, kConnected };
   static const int kMaxRetryDelayMs = 30*1000;
   static const int kInitRetryDelayMs = 500;
 
   void connect();
   void connecting(int sockfd);
+
   void retry(int sockfd);
+  int removeAndResetChannel();
+  void resetChannel();
+
+  void setState(States s) { m_state = s; }
 
   EventLoop* p_loop;
   int m_retryDelayMs;
   InetAddress m_serverAddr;
+
+  States m_state;
+
   std::unique_ptr<Channel> p_channel;
   NewConnectionCallback m_newConnectionCallBack;
 

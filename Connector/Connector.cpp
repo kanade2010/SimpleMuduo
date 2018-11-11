@@ -2,11 +2,13 @@
 
 #include "SocketHelp.hh"
 #include "Connector.hh"
+#include "EventLoop.hh"
 #include "Logger.hh"
 
 Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
   :p_loop(loop),
   m_serverAddr(serverAddr),
+  m_state(kDisconnected),
   m_retryDelayMs(kInitRetryDelayMs)
 {
 
@@ -29,12 +31,14 @@ void Connector::connect()
   int ret = sockets::connect(sockfd, m_serverAddr.getSockAddr());
   int savedErrno = (ret == 0) ? 0 : errno;
 
+  if(ret != 0) LOG_TRACE << "connect error ("<< savedErrno << ") : " << strerror_tl(savedErrno);
+
   switch(savedErrno)
   {
     case 0:
-    case EINPROGRESS:      //Operation now in progress 
-    case EINTR:            //Interrupted system call 
-    case EISCONN:          //Transport endpoint is already connected 
+    case EINPROGRESS:      //Operation now in progress
+    case EINTR:            //Interrupted system call
+    case EISCONN:          //Transport endpoint is already connected
       connecting(sockfd);
       break;
 
@@ -69,12 +73,13 @@ void Connector::connect()
 
 void Connector::connecting(int sockfd)
 {
+  LOG_TRACE << "Connector::connecting] sockfd : " << sockfd;
   assert(!p_channel);
   p_channel.reset(new Channel(p_loop, sockfd));
   p_channel->setWriteCallBack(std::bind(&Connector::handleWrite, this));
   //p_channel->setErrorCallback()
 
-  //enableWriting if Channel Writeable ,Connect Success. 
+  //enableWriting if Channel Writeable ,Connect Success.
   p_channel->enableWriting();
 }
 
@@ -87,10 +92,56 @@ void Connector::retry(int sockfd)
 
 }
 
+int Connector::removeAndResetChannel()
+{
+  p_channel->disableAll();
+  p_channel->remove();
+
+  int sockfd = p_channel->fd();
+
+  //p_loop->queueInLoop(std::bind(&Connector::resetChannel, this));
+
+  return sockfd;
+}
+
+void Connector::resetChannel()
+{
+  LOG_TRACE << "Connector::resetChannel()";
+  p_channel.reset();
+}
+
 void Connector::handleWrite()
 {
   LOG_TRACE << "Connector::handleWrite ";
-  m_newConnectionCallBack(p_channel->fd());
+
+  if(m_state == kDisconnected)
+  {
+    int sockfd = removeAndResetChannel();
+    int err = sockets::getSocketError(sockfd);
+
+    if(err)
+    {
+      LOG_WARN << "Connector::handleWrite - SO_ERROR = "
+               << err << " " << strerror_tl(err);
+      retry(sockfd);
+    }
+    /*else if (sockets::isSelfConnect(sockfd))
+    {
+
+    }*/
+    else
+    {
+      setState(kConnected);
+      m_newConnectionCallBack(sockfd);
+    }
+
+  }
+  else
+  {
+    //怎么回事 , 小老弟？
+    assert(m_state == kDisconnected);
+  }
+
 }
 
 

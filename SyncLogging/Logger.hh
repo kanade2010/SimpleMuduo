@@ -114,4 +114,6 @@ private:
 
 };
 
+const char* strerror_tl(int savedErrno);
+
 #endif

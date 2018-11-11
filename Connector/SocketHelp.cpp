@@ -7,10 +7,10 @@
 #include <assert.h>
 #include <sys/uio.h>  // readv
 
-int sockets::createSocket(sa_family_t family){ 
+int sockets::createSocket(sa_family_t family){
   // Call "socket()" to create a (family) socket of the specified type.
   // But also set it to have the 'close on exec' property (if we can)
-	
+
 	int sock;
 
 	//CLOEXEC，即当调用exec（）函数成功后，文件描述符会自动关闭。
@@ -183,6 +183,22 @@ void sockets::toIp(char* buf, size_t size,
     assert(size >= INET6_ADDRSTRLEN);
     const struct sockaddr_in6* addr6 = (const struct sockaddr_in6* )(addr);
     ::inet_ntop(AF_INET6, &addr6->sin6_addr, buf, static_cast<socklen_t>(size));
+  }
+}
+
+int sockets::getSocketError(int sockfd)
+{
+  int optval;
+
+  socklen_t optlen = static_cast<socklen_t>(sizeof optval);
+
+  if(::getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
+  {
+    return errno;
+  }
+  else
+  {
+    return optval;
   }
 }
 
