@@ -5,6 +5,8 @@
 #include "EventLoop.hh"
 #include "Logger.hh"
 
+const int Connector::kMaxRetryDelayMs;
+
 Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
   :p_loop(loop),
   m_serverAddr(serverAddr),
@@ -86,10 +88,13 @@ void Connector::connecting(int sockfd)
 void Connector::retry(int sockfd)
 {
   sockets::close(sockfd);
+  setState(kDisconnected);
 
   LOG_INFO << "Connector::retry - Retry connecting to " << m_serverAddr.toIpPort()
            << " in " << m_retryDelayMs << " milliseconds. ";
 
+  p_loop->runAfter(m_retryDelayMs/1000.0, std::bind(&Connector::start, this));
+  m_retryDelayMs = std::min(m_retryDelayMs * 2, kMaxRetryDelayMs);
 }
 
 int Connector::removeAndResetChannel()

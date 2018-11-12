@@ -1,7 +1,8 @@
 #ifndef _MUTEXLOCK_HH
 #define _MUTEXLOCK_HH
 
-#include <pthread.h>
+//#include <pthread.h>
+#include <mutex>
 
 class MutexLock{
 
@@ -30,7 +31,6 @@ private:
 	pthread_mutex_t m_mutex;
 	bool m_isLocking;
 };
-
 
 class MutexLockGuard
 {

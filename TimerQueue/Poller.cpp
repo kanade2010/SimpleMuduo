@@ -105,7 +105,8 @@ void Poller::removeChannel(Channel* channel)
   assert(0 <= idx && idx < static_cast<int>(m_pollfds.size()));
   const struct pollfd& pfd = m_pollfds[idx];
   (void)pfd;
-  assert(pfd.fd == -channel->fd() - 1 && pfd.events == channel->events());
+  LOG_TRACE << "Poller::removeChannel() idx " << idx << " pfd.fd " << pfd.fd << " pfd.events " << pfd.events;
+  assert(pfd.fd == - 1 && pfd.events == channel->events());
   size_t n = m_channels.erase(channel->fd());
   assert(n == 1); (void)n;
   if(m_pollfds.size() - 1 == idx)
