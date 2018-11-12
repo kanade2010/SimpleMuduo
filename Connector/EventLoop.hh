@@ -57,6 +57,9 @@ private:
   void handleRead();  // waked up
 	void doPendingFunctors();
 
+	//used for loop to debug.
+	void printActiveChannels() const;
+
 	typedef std::vector<Channel*> ChannelList;
 
 	bool m_looping;
@@ -66,8 +69,8 @@ private:
 	std::unique_ptr<TimerQueue> m_timerQueue;
 	ChannelList m_activeChannels;
 
+	int m_wakeupFd;//... 放p_wakeupChannel 后面会出错,一定要按顺序来.
 	std::unique_ptr<Channel> p_wakeupChannel;
-	int m_wakeupFd;
 	mutable MutexLock m_mutex;
   bool m_callingPendingFunctors; /* atomic */
   std::vector<Functor> m_pendingFunctors; // @GuardedBy mutex_

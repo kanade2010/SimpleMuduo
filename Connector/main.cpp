@@ -23,7 +23,7 @@ int main()
   EventLoop loop;
   g_loop = &loop;
 
-  InetAddress serverAddr("127.0.0.1", 123456);
+  InetAddress serverAddr("127.0.0.1", 8888);
   Connector client(&loop, serverAddr);
   client.setNewConnectionCallback(newConnetion);
   client.start();

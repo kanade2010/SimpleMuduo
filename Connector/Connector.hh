@@ -25,7 +25,6 @@ public:
   void restart();// must be called in loop thread
   void stop(); // can be called in any thread
 
-  void handleWrite();
 private:
   const Connector operator=(const Connector&);
   Connector(const Connector&);
@@ -37,11 +36,16 @@ private:
   void connect();
   void connecting(int sockfd);
 
+  void handleWrite();
+  void handleError();
+
   void retry(int sockfd);
   int removeAndResetChannel();
   void resetChannel();
 
   void setState(States s) { m_state = s; }
+  void startInLoop();
+  void stopInLoop();
 
   EventLoop* p_loop;
   int m_retryDelayMs;

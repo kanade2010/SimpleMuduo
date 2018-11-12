@@ -39,6 +39,10 @@ public:
   int index() { return m_index; }
   void set_index(int idx) { m_index =idx; }
 
+  // for debug
+  std::string reventsToString() const;
+  std::string eventsToString() const;
+
   EventLoop* ownerLoop() { return p_loop; }
   void remove();
 
@@ -47,6 +51,9 @@ private:
   Channel(const Channel&);
 
   void update();
+
+  //used for r/eventsToString()
+  std::string eventsToString(int fd, int ev) const;
 
   static const int kNoneEvent;
   static const int kReadEvent;

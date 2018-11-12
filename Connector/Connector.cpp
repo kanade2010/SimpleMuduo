@@ -24,7 +24,32 @@ Connector::~Connector()
 void Connector::start()
 {
 
+  p_loop->runInLoop(std::bind(&Connector::startInLoop, this));
+}
+
+void Connector::startInLoop()
+{
+  p_loop->assertInLoopThread();
+  assert(m_state == kDisconnected);
+
   connect();
+}
+
+void Connector::stop()
+{
+  p_loop->queueInLoop(std::bind(&Connector::stopInLoop, this));
+}
+
+void Connector::stopInLoop()
+{
+  p_loop->assertInLoopThread();
+
+  if(m_state == kConnecting)
+  {
+    setState(kDisconnected);
+    int sockfd = removeAndResetChannel();
+    //retry(sockfd);
+  }
 }
 
 void Connector::connect()
@@ -104,7 +129,7 @@ int Connector::removeAndResetChannel()
 
   int sockfd = p_channel->fd();
 
-  //p_loop->queueInLoop(std::bind(&Connector::resetChannel, this));
+  p_loop->queueInLoop(std::bind(&Connector::resetChannel, this));
 
   return sockfd;
 }
@@ -149,5 +174,16 @@ void Connector::handleWrite()
 
 }
 
+void Connector::handleError()
+{
+  LOG_ERROR << "Connector::handleError States " << m_state;
 
+  if(m_state == kConnecting)
+  {
+    int sockfd = removeAndResetChannel();
+    int err = sockets::getSocketError(sockfd);
+    LOG_TRACE << "SOCK_ERROR = " << err << " " << strerror_tl(err);
+    retry(sockfd);
+  }
+}
 

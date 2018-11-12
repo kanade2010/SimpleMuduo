@@ -16,11 +16,15 @@ const int kPollTimeMs = 10000;
 int createEventfd()
 {
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+
+  LOG_TRACE << "createEventfd() fd : " << evtfd;
+
   if (evtfd < 0)
   {
     LOG_SYSERR << "Failed in eventfd";
     abort();
   }
+
   return evtfd;
 }
 
@@ -70,6 +74,9 @@ void EventLoop::loop()
   {
     m_activeChannels.clear();
     m_poller->poll(1000, &m_activeChannels);
+
+    printActiveChannels();
+
     for(ChannelList::iterator it = m_activeChannels.begin();
       it != m_activeChannels.end(); ++it)
     {
@@ -103,9 +110,9 @@ void EventLoop::doPendingFunctors()
 
 }
 
-void EventLoop::handleRead() //hand wakeup Fd
+void EventLoop::handleRead() //handle wakeup Fd
 {
-  LOG_TRACE << "EventLoop::handleRead()";
+  LOG_TRACE << "EventLoop::handleRead() handle wakeup Fd";
   uint64_t one = 1;
   ssize_t n = sockets::read(m_wakeupFd, &one, sizeof one);
   if(n != sizeof one)
@@ -203,5 +210,16 @@ void EventLoop::wakeup()
   if(n != sizeof one)
   {
     LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
+  }
+}
+
+
+void EventLoop::printActiveChannels() const
+{
+  for (ChannelList::const_iterator it = m_activeChannels.begin();
+      it != m_activeChannels.end(); ++it)
+  {
+    const Channel* ch = *it;
+    LOG_TRACE << "{" << ch->reventsToString() << "} ";
   }
 }
