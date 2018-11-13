@@ -6,15 +6,19 @@
 
 #include "TimeStamp.hh"
 
+class TcpConnection;
+typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
+
 namespace NetCallBacks
 {
 
 // All client visible callbacks go here.
 
+typedef std::function<void()> TimerCallBack;
+typedef std::function<void(const TcpConnectionPtr& )> ConnectionCallBack;
+typedef std::function<void(const TcpConnectionPtr& , const char* , ssize_t )> MessageCallBack;
 
-typedef std::function<void()> TimerCallback;
-typedef std::function<void ()> ConnectionCallBack;
-
+void defaultConnectionCallback();
 
 }
 

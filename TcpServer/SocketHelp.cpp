@@ -186,6 +186,19 @@ void sockets::toIp(char* buf, size_t size,
   }
 }
 
+struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
+{
+  struct sockaddr_in6 localaddr;
+  ::bzero(&localaddr, sizeof localaddr);
+  socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
+  if(::getsockname(sockfd, (struct sockaddr*)(&localaddr), &addrlen) < 0)
+  {
+    LOG_SYSERR << "sockets::getLocalAddr";
+  }
+
+  return localaddr;
+}
+
 /*
 const struct sockaddr* sockets::sockaddr_cast(const struct sockaddr_in* addr)
 {

@@ -15,8 +15,8 @@ public:
   Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool reuseport = true);
   ~Acceptor();
 
-  bool listenning() const;
   void listen();
+  bool listenning() const { return m_listenning; } // get listen status.
 
   void setNewConnectionCallBack(const NewConnectionCallBack& cb) { m_newConnectionCallBack = cb; }
 

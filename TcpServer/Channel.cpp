@@ -1,5 +1,6 @@
 #include <poll.h>
 #include <assert.h>
+#include <sstream>
 
 #include "Channel.hh"
 #include "EventLoop.hh"
@@ -59,3 +60,34 @@ void Channel::handleEvent()
 
 }
 
+std::string Channel::reventsToString() const
+{
+  return eventsToString(m_fd, m_revents);
+}
+
+std::string Channel::eventsToString() const
+{
+  return eventsToString(m_fd, m_events);
+}
+
+std::string Channel::eventsToString(int fd, int ev) const
+{
+  std::ostringstream oss;
+  oss << fd << ": ";
+  if (ev & POLLIN)
+    oss << "IN ";
+  if (ev & POLLPRI)
+    oss << "PRI ";
+  if (ev & POLLOUT)
+    oss << "OUT ";
+  if (ev & POLLHUP)
+    oss << "HUP ";
+  if (ev & POLLRDHUP)
+    oss << "RDHUP ";
+  if (ev & POLLERR)
+    oss << "ERR ";
+  if (ev & POLLNVAL)
+    oss << "NVAL ";
+
+  return oss.str().c_str();
+}

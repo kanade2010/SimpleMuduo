@@ -15,6 +15,7 @@ EventLoop* g_loop;
 void newConnetion(int sockfd)
 {
   LOG_DEBUG << "newConnetion() : Connected a new connection.";
+  sockets::write(sockfd, "hello", sizeof "hello");
   g_loop->quit();
 }
 
