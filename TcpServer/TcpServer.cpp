@@ -15,7 +15,6 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& listenAddr, const std::
   :p_loop(loop),
   m_name(name),
   p_acceptor(new Acceptor(loop, listenAddr)),
-  m_connectionCallBack(NetCallBacks::defaultConnectionCallback),
   m_nextConnId(1)
 {
   p_acceptor->setNewConnectionCallBack(
@@ -51,8 +50,30 @@ void TcpServer::newConnetion(int sockfd, const InetAddress& peerAddr)
            << "] from " << peerAddr.toIpPort();
   
   InetAddress localAddr(sockets::getLocalAddr(sockfd));
-  TcpConnectionPtr conn(new TcpConnection(p_loop, connName, sockfd, localAddr, peerAddr));
+  TcpConnectionPtr conn(new TcpConnection(p_loop, 
+               connName, sockfd, localAddr, peerAddr));
+  m_connectionsMap[connName] = conn;
   conn->setConnectionCallBack(m_connectionCallBack);
   conn->setMessageCallBack(m_messageCallBack);
+  conn->setCloseCallBack(std::bind(&TcpServer::removeConnection, this, std::placeholders::_1));
+  conn->connectEstablished();
+}
 
+void TcpServer::removeConnection(const TcpConnectionPtr& conn)
+{
+  // FIXME: unsafe
+  p_loop->runInLoop(std::bind(&TcpServer::removeConnectionInLoop, this, conn));
+}
+
+void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn)
+{
+  p_loop->assertInLoopThread();
+  LOG_INFO << "TcpServer::removeConnectionInLoop [" << m_name
+           << "] - connection " << conn->name();
+  size_t n = m_connectionsMap.erase(conn->name());
+  (void)n;
+  assert(n == 1);
+  EventLoop* ioLoop = conn->getLoop();
+  ioLoop->queueInLoop(//此时的Conn为最后一个shared_ptr.离开作用于后析构此TcpConnection.
+      std::bind(&TcpConnection::connectDestroyed, conn));
 }

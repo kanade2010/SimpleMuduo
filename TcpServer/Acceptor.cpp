@@ -42,6 +42,7 @@ void Acceptor::listen()
 
 void Acceptor::handleRead()
 {
+  LOG_TRACE << "Acceptor::handleRead()";
   p_loop->assertInLoopThread();
   InetAddress peerAddr;
   int connfd = m_acceptSocket.accept(&peerAddr);

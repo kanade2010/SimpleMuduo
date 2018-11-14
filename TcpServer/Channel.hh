@@ -24,6 +24,7 @@ public:
   void setReadCallBack(const EventCallBack& cb) { m_readCallBack = cb; }
   void setWriteCallBack(const EventCallBack& cb) { m_writeCallBack = cb; }
   void setErrorCallBack(const EventCallBack& cb) { m_errorCallBack = cb; }
+  void setCloseCallBack(const EventCallBack& cb) { m_closeCallBack = cb; }
 
   int fd() const { return m_fd; }
   int events() const { return m_events; }
@@ -69,6 +70,7 @@ private:
   EventCallBack m_readCallBack;
   EventCallBack m_writeCallBack;
   EventCallBack m_errorCallBack;
+  EventCallBack m_closeCallBack;
 };
 
 #endif

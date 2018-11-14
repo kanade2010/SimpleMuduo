@@ -73,7 +73,7 @@ void EventLoop::loop()
   while(!m_quit)
   {
     m_activeChannels.clear();
-    m_poller->poll(1000, &m_activeChannels);
+    m_poller->poll(kPollTimeMs, &m_activeChannels);
 
     printActiveChannels();
     for(ChannelList::iterator it = m_activeChannels.begin();

@@ -1,6 +1,7 @@
 #ifndef _NET_TCPSERVER_HH
 #define _NET_TCPSERVER_HH
 
+#include <map>
 #include <memory>
 #include <functional>
 
@@ -26,10 +27,15 @@ private:
   TcpServer(const TcpServer&);
 
   void newConnetion(int sockfd, const InetAddress& peerAddr);
+  void removeConnection(const TcpConnectionPtr& conn);
+  void removeConnectionInLoop(const TcpConnectionPtr& conn);
+
+  typedef std::map<std::string, TcpConnectionPtr> ConnectionMap;
 
   EventLoop* p_loop;
   std::string m_name;
   std::unique_ptr<Acceptor> p_acceptor;
+  ConnectionMap m_connectionsMap;
   NetCallBacks::ConnectionCallBack m_connectionCallBack;
   NetCallBacks::MessageCallBack m_messageCallBack;
   int m_nextConnId;  
