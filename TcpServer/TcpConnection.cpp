@@ -26,16 +26,16 @@ TcpConnection::TcpConnection(EventLoop* loop,
             << " fd=" << sockfd;
 
   p_socket->setKeepAlive(true);
-  //connectEstablished();   不可在构造函数征调 shared_from_this();
+  //connectEstablished();  do not in Constructor call shared_from_this();
 }
 
 TcpConnection::~TcpConnection()
 {
   LOG_DEBUG << "TcpConnection::dtor[" << m_name << "] at "
   << this << " fd=" << p_channel->fd()
-  << " state=" ;
+  << " state=" << stateToString();
 
-  //assert(m_state == kDisconnected);
+  assert(m_state == kDisConnected);
 
 }
 
@@ -69,11 +69,18 @@ void TcpConnection::handleRead()
   }
 }
 
+void TcpConnection::handleError()
+{
+  int err = sockets::getSocketError(channel_->fd());
+  LOG_ERROR << "TcpConnection::handleError [" << m_name
+            << "] - SO_ERROR = " << err << " " << strerror_tl(err);
+}
+
 void TcpConnection::handleClose()
 {
   LOG_TRACE << "TcpConnection::handleClose()";
   p_loop->assertInLoopThread();
-  LOG_TRACE << "fd = " << p_channel->fd() << " state = " ;//<< stateToString();
+  LOG_TRACE << "fd = " << p_channel->fd() << " state = " << stateToString();
   assert(m_state == kConnected );//|| m_state == kDisConnecting);
 
   setState(kDisConnected);
@@ -100,4 +107,22 @@ void TcpConnection::connectDestroyed()
   }
 
   p_channel->remove();
+}
+
+
+const char* TcpConnection::stateToString() const
+{
+  switch (m_state)
+  {
+    case kDisConnecting:
+      return "kDisConnected";
+    case kConnecting:
+      return "kConnecting";
+    case kConnected:
+      return "kConnected";
+    case kDisConnecting:
+      return "kDisConnecting";
+    default:
+      return "Unknown State";
+  }
 }

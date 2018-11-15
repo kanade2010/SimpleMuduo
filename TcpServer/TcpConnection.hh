@@ -32,11 +32,14 @@ public:
 
   bool isConnected() const { return m_state == kConnected; }
   bool isDisConnected() const { return m_state == kDisConnected; }
+  const char* TcpConnection::stateToString() const;
+
 private:
   enum StateE { kDisConnected, kConnecting, kConnected, };
 
   void setState(StateE s) { m_state = s; }
   void handleRead();
+  void handleError();
   void handleClose();
 
   EventLoop* p_loop;
