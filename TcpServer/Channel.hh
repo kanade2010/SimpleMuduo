@@ -34,6 +34,8 @@ public:
   void enableReading() { m_events |= kReadEvent; update(); }
   void disableReading() { m_events &= ~kReadEvent; update(); }
   void enableWriting() { m_events |= kWriteEvent; update(); }
+  bool isWriting() { m_events &= kWriteEvent; }
+  bool isReading() { m_events &= kReadEvent; }
   void disableWriting() { m_events &= ~kWriteEvent; update(); }
   void disableAll() { m_events = kNoneEvent; update(); }
 

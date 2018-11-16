@@ -56,22 +56,139 @@ void TcpConnection::connectEstablished()
 
 }
 
+void TcpConnection::send(const void* data, int len)
+{
+  if(m_state == kConnected)
+  {
+    if(p_loop->isInloopThread())
+    {
+      sendInLoop(data, len);
+    }
+    /*else
+    {
+      p_loop->runInLoop(std::bind(&TcpConnection::sendInLoop, this, ))
+    }*/
+  }
+}
+
+void TcpConnection::sendInLoop(const void* data, size_t len)
+{
+  p_loop->assertInLoopThread();
+  ssize_t nwrote = 0;
+  size_t remaining = len;
+  bool faultError = false;
+
+  if(m_state == kDisConnected)
+  {
+    LOG_WARN << "disconnected, give up writing.";
+    return ;
+  }
+
+  //if nothing in output Buffer, try writing directly.
+  if(p_channel->isWriting() && m_outputBuffer.readableBytes() == 0)
+  {
+    nwrote = sockets::write(p_channel->fd(), data, len);
+    if(nwrote >= 0)
+    {
+      remaining = len - nwrote;
+      if(remaining == 0 )//&& m_writeCompleteCallBack)
+      {
+        LOG_TRACE << "TcpConnection::sendInLoop() writeCompleteCallBack()";
+        //fixd need
+        //p_loop->queueInLoop(std::bind())
+      }
+    }
+    else // nwrote < 0
+    {
+      nwrote = 0;
+      if(errno != EWOULDBLOCK) // EAGIN
+      {
+        LOG_SYSERR << "TcpConnection::sendInLoop()";
+        if(errno == EPIPE || errno == ECONNRESET)
+        {
+          faultError = true;
+        }
+      }
+    }
+  }
+
+  assert(remaining <= len);
+  if(!faultError && remaining > 0)
+  {
+    /*size_t oldLen = m_outputBuffer.readableBytes();
+    if(oldLen + remaining >= )
+    {
+        //fixd need
+    }*/
+
+    m_outputBuffer.append(static_cast<const char*>(data) + nwrote, remaining);
+    if(!p_channel->isWriting())
+    {
+      p_channel->enableWriting();
+    }
+  }
+}
+
 void TcpConnection::handleRead()
 {
   LOG_TRACE << "TcpConnection::handleRead()";
-  char buf[666] = {0};
-  ssize_t n = sockets::read(p_channel->fd(), buf, sizeof buf);
+
+  int savedErrno = 0;
+
+  ssize_t n = m_inputBuffer.readFd(p_channel->fd(), &savedErrno);
   if(n > 0){
-    m_messageCallBack(shared_from_this(), buf, n);
+    m_messageCallBack(shared_from_this(), &m_inputBuffer, n);
   }
   else if ( n==0 ){
     handleClose();
+  }
+  else
+  {
+    errno = savedErrno;
+    LOG_SYSERR << "TcpConnection::handleRead()";
+    handleError();
+  }
+}
+
+void TcpConnection::handleWrite()
+{
+  LOG_TRACE << "TcpConnection::handleWrite()";
+  p_loop->assertInLoopThread();
+  if(p_channel->isWriting())
+  {
+    ssize_t n = sockets::write(p_channel->fd(), m_outputBuffer.peek(), m_outputBuffer.readableBytes());
+
+    if(n > 0)
+    {
+      m_outputBuffer.retrieve(n);
+      if(m_outputBuffer.readableBytes() == 0)
+      {
+        p_channel->disableWriting();
+        if(0)//m_writeCompleteCallback)
+        {
+
+        }
+        if(0)//m_state == kDisConnecting)
+        {
+
+        }
+      }
+      else
+      {
+        LOG_SYSERR << "TcpConnection::handleWrite";
+      }
+    }
+  }
+  else
+  {
+    LOG_ERROR << "Connection fd = " << p_channel->fd()
+              << " is down, no more writing";
   }
 }
 
 void TcpConnection::handleError()
 {
-  int err = sockets::getSocketError(channel_->fd());
+  int err = sockets::getSocketError(p_channel->fd());
   LOG_ERROR << "TcpConnection::handleError [" << m_name
             << "] - SO_ERROR = " << err << " " << strerror_tl(err);
 }
@@ -88,7 +205,7 @@ void TcpConnection::handleClose()
 
   TcpConnectionPtr guardThis(shared_from_this());
 
-  m_closeCallBack(guardThis); // to release Tcpserver ConnMap resource.
+  m_closeCallBack(guardThis); // to  Tcpserver ConnMap resource.
 }
 
 void TcpConnection::connectDestroyed()
@@ -109,12 +226,11 @@ void TcpConnection::connectDestroyed()
   p_channel->remove();
 }
 
-
 const char* TcpConnection::stateToString() const
 {
   switch (m_state)
   {
-    case kDisConnecting:
+    case kDisConnected:
       return "kDisConnected";
     case kConnecting:
       return "kConnecting";

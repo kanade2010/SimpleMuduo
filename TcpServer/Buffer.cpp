@@ -1,6 +1,13 @@
 #include "Buffer.hh"
+#include "SocketHelp.hh"
 
-const ssize_t kExtraBufferSize 65535
+/*#include <sys/uio.h>
+#include <iostream>*/
+
+const ssize_t kExtraBufferSize = 20480;
+
+const size_t Buffer::kCheapPrepend;
+const size_t Buffer::kInitialSize;
 
 ssize_t Buffer::readFd(int fd, int* savedErrno)
 {
@@ -26,7 +33,8 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   }
   else
   {
-    m_writerIndex = buffer_.size();
+    m_writerIndex = m_buffer.size();
+    printf("Buffer::readFd() : len writable %d len %d\n", writable, n - writable);
     append(extrabuf, n - writable);
   }
   // if (n == writable + sizeof extrabuf)
@@ -52,4 +60,19 @@ int main()
   std::cout << buffer.writableBytes() << std::endl;
   std::cout << buffer.peek() << std::endl;
 
+  buffer.retrieveAll();
+  std::cout << buffer.writableBytes() << std::endl;
+
+  buffer.append("123456789", 9);
+  std::cout << buffer.writableBytes() << std::endl;
+  std::cout << buffer.peek() << std::endl;
+
+  while(1)
+  {
+    int err = 0;
+    buffer.readFd(0, &err);
+    std::cout << buffer.writableBytes() << std::endl;
+    std::cout << buffer.peek() << std::endl;
+    std::cout << buffer.internalCapacity() << std::endl;
+  }
 }*/

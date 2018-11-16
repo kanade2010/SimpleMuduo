@@ -29,11 +29,13 @@ void AsyncFlush()
 void onConnection(const TcpConnectionPtr& conn)
 {
   printf("onConnection\n");
+  conn->send("123456789", 10);
 }
 
-void onMessage(const TcpConnectionPtr& conn, const char* data, ssize_t len)
+void onMessage(const TcpConnectionPtr& conn, Buffer* interBuffer, ssize_t len)
 {
-  printf("onMessage\n");
+  printf("onMessage : received %d Bytes from connection [%s]\n", interBuffer->readableBytes(), conn->name());
+  printf("onMessage : %s\n", interBuffer->retrieveAsString(len).c_str());
 }
 
 

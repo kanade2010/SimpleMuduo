@@ -22,10 +22,8 @@
 class Buffer
 {
 public:
-
   static const size_t kCheapPrepend = 8;
   static const size_t kInitialSize = 4096;
-//public:  
 
 	explicit Buffer(size_t initialSize = kInitialSize)
 	: m_buffer(kCheapPrepend + initialSize),
@@ -33,8 +31,8 @@ public:
 	  m_writerIndex(kCheapPrepend)
 	  {
 	    assert(readableBytes() == 0);
-        assert(writableBytes() == initialSize);
-        assert(prependableBytes() == kCheapPrepend);
+      assert(writableBytes() == initialSize);
+      assert(prependableBytes() == kCheapPrepend);
 	  }
 
   size_t readableBytes() const
@@ -43,7 +41,7 @@ public:
   size_t writableBytes() const
   { return m_buffer.size() - m_writerIndex; }
 
-  size_t prependableBytes() const
+  size_t prependableBytes() const //前面预留出来的字节数，(s-(s-rI));
   { return m_readerIndex; }
 
   const char* peek() const
@@ -86,15 +84,49 @@ public:
   	m_writerIndex = kCheapPrepend;
   }
 
-/*  void append(const char* /*restrict data, size_t len)
+  std::string retrieveAsString(size_t len)
   {
-    ensureWritableBytes(len);
+    assert(len <= readableBytes());
+    std::string result(peek(), len);
+    retrieve(len);
+    return result;
+  }
+
+  void makeSpace(int len)
+  {
+    if(writableBytes() + prependableBytes() < len + kCheapPrepend)
+    {
+      m_buffer.resize(m_writerIndex + len);
+    }
+    else
+    {
+      // move readable data to the front, make space inside buffer
+      assert(kCheapPrepend < m_readerIndex);
+      size_t readable = readableBytes();
+      std::copy(begin() + m_readerIndex, begin() + m_writerIndex, begin() + kCheapPrepend);
+      m_readerIndex = kCheapPrepend;
+      m_writerIndex = m_readerIndex + readable;
+      assert(readable == readableBytes());
+    }
+  }
+
+  void append(const char* data/*restrict data*/, size_t len)
+  {
+    if (writableBytes() < len)
+    {
+      makeSpace(len);
+    }
+    assert(writableBytes() >= len);
     std::copy(data, data+len, beginWrite());
     hasWritten(len);
   }
 
-  ssize_t Buffer::readFd(int fd, int* savedErrno);
-*/
+  ssize_t readFd(int fd, int* savedErrno);
+
+  size_t internalCapacity() const
+  {
+    return m_buffer.capacity();
+  }
 
 private:
   char* begin()
