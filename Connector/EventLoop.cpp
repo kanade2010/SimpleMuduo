@@ -90,44 +90,6 @@ void EventLoop::loop()
 
 }
 
-void EventLoop::doPendingFunctors()
-{
-  LOG_TRACE << "EventLoop::doPendingFunctors()";
-  std::vector<Functor> functors;
-  m_callingPendingFunctors = true;
-
-  {
-    MutexLockGuard lock(m_mutex);
-    functors.swap(m_pendingFunctors);
-  }
-
-  for(size_t i = 0; i < functors.size(); ++i)
-  {
-    functors[i]();
-  }
-
-  m_callingPendingFunctors = false;
-
-}
-
-void EventLoop::handleRead() //handle wakeup Fd
-{
-  LOG_TRACE << "EventLoop::handleRead() handle wakeup Fd";
-  uint64_t one = 1;
-  ssize_t n = sockets::read(m_wakeupFd, &one, sizeof one);
-  if(n != sizeof one)
-  {
-    LOG_ERROR << "EventLoop::handleRead() reads " << n << "bytes instead of 8";
-  }
-}
-
-void EventLoop::abortNotInLoopThread()
-{
-  LOG_FATAL << "EventLoop::abortNotInLoopThread - EventLoop " << this
-            << " was created in threadId_ = " << m_threadId
-            << ", current thread id = " <<  CurrentThread::tid();
-}
-
 void EventLoop::runInLoop(const Functor&  cb)
 {
   if(isInloopThread())
@@ -152,6 +114,54 @@ void EventLoop::queueInLoop(const Functor& cb)
   {
     wakeup();
   }
+}
+
+void EventLoop::wakeup()
+{
+  uint64_t one = 1;
+  ssize_t n = sockets::write(m_wakeupFd, &one, sizeof one);
+  if(n != sizeof one)
+  {
+    LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
+  }
+}
+
+void EventLoop::handleRead() //handle wakeup Fd
+{
+  LOG_TRACE << "EventLoop::handleRead() handle wakeup Fd";
+  uint64_t one = 1;
+  ssize_t n = sockets::read(m_wakeupFd, &one, sizeof one);
+  if(n != sizeof one)
+  {
+    LOG_ERROR << "EventLoop::handleRead() reads " << n << "bytes instead of 8";
+  }
+}
+
+void EventLoop::doPendingFunctors()
+{
+  LOG_TRACE << "EventLoop::doPendingFunctors()";
+  std::vector<Functor> functors;
+  m_callingPendingFunctors = true;
+
+  {
+    MutexLockGuard lock(m_mutex);
+    functors.swap(m_pendingFunctors);
+  }
+
+  for(size_t i = 0; i < functors.size(); ++i)
+  {
+    functors[i]();
+  }
+
+  m_callingPendingFunctors = false;
+
+}
+
+void EventLoop::abortNotInLoopThread()
+{
+  LOG_FATAL << "EventLoop::abortNotInLoopThread - EventLoop " << this
+            << " was created in threadId_ = " << m_threadId
+            << ", current thread id = " <<  CurrentThread::tid();
 }
 
 EventLoop* EventLoop::getEventLoopOfCurrentThread()
@@ -201,18 +211,6 @@ TimerId EventLoop::runEvery(double interval, const NetCallBacks::TimerCallBack& 
   TimeStamp time(times::addTime(TimeStamp::now(), interval));
   return m_timerQueue->addTimer(cb, time, interval);
 }
-
-
-void EventLoop::wakeup()
-{
-  uint64_t one = 1;
-  ssize_t n = sockets::write(m_wakeupFd, &one, sizeof one);
-  if(n != sizeof one)
-  {
-    LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
-  }
-}
-
 
 void EventLoop::printActiveChannels() const
 {

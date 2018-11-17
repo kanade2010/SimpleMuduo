@@ -13,12 +13,13 @@ Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
   m_state(kDisconnected),
   m_retryDelayMs(kInitRetryDelayMs)
 {
-
+  LOG_DEBUG << "ctor[" << this << "]";
 }
 
 Connector::~Connector()
 {
-
+  LOG_DEBUG << "dtor[" << this << "]";
+  assert(!p_channel);
 }
 
 void Connector::start()
@@ -46,9 +47,9 @@ void Connector::stopInLoop()
 
   if(m_state == kConnecting)
   {
-    setState(kDisconnected);
     int sockfd = removeAndResetChannel();
-    //retry(sockfd);
+    sockets::close(sockfd);
+    setState(kDisconnected);
   }
 }
 
@@ -74,7 +75,7 @@ void Connector::connect()
     case EADDRNOTAVAIL:
     case ECONNREFUSED:
     case ENETUNREACH:
-      //retry(sockfd);
+      retry(sockfd);
       LOG_SYSERR << "reSave Error. " << savedErrno;
       break;
 
@@ -101,6 +102,7 @@ void Connector::connect()
 void Connector::connecting(int sockfd)
 {
   LOG_TRACE << "Connector::connecting] sockfd : " << sockfd;
+  setState(kConnecting);
   assert(!p_channel);
   p_channel.reset(new Channel(p_loop, sockfd));
   p_channel->setWriteCallBack(std::bind(&Connector::handleWrite, this));
@@ -118,7 +120,7 @@ void Connector::retry(int sockfd)
   LOG_INFO << "Connector::retry - Retry connecting to " << m_serverAddr.toIpPort()
            << " in " << m_retryDelayMs << " milliseconds. ";
 
-  p_loop->runAfter(m_retryDelayMs/1000.0, std::bind(&Connector::start, this));
+  p_loop->runAfter(m_retryDelayMs/1000.0, std::bind(&Connector::startInLoop, this));
   m_retryDelayMs = std::min(m_retryDelayMs * 2, kMaxRetryDelayMs);
 }
 
@@ -144,7 +146,7 @@ void Connector::handleWrite()
 {
   LOG_TRACE << "Connector::handleWrite ";
 
-  if(m_state == kDisconnected)
+  if(m_state == kConnecting)
   {
     int sockfd = removeAndResetChannel();
     int err = sockets::getSocketError(sockfd);
