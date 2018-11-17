@@ -24,6 +24,7 @@ public:
 	EventLoop();
 	~EventLoop();
 	void loop();
+	void quit();
 
 	void assertInLoopThread()
 	{
@@ -34,18 +35,17 @@ public:
 	}
 
 	bool isInloopThread() const {return m_threadId == CurrentThread::tid(); }
-	void runInLoop(const Functor& cb);
-  void queueInLoop(const Functor& cb);
 
-	void quit();
-
-	void wakeup();
 	void updateChannel(Channel* channel);
   void removeChannel(Channel* channel);
 
 	TimerId runAt(const TimeStamp& time, const NetCallBacks::TimerCallBack& cb);
 	TimerId runAfter(double delay, const NetCallBacks::TimerCallBack& cb);
 	TimerId runEvery(double interval, const NetCallBacks::TimerCallBack& cb);
+
+	void runInLoop(const Functor& cb);
+	void wakeup();
+  void queueInLoop(const Functor& cb);
 
 	static EventLoop* getEventLoopOfCurrentThread();
 
@@ -54,7 +54,9 @@ private:
 	EventLoop(const EventLoop&);
 
 	void abortNotInLoopThread();
-  void handleRead();  // waked up
+
+  //used to waked up
+  void handleRead();
 	void doPendingFunctors();
 
 	//used for loop to debug.
@@ -69,7 +71,7 @@ private:
 	std::unique_ptr<TimerQueue> m_timerQueue;
 	ChannelList m_activeChannels;
 
-	int m_wakeupFd;//... ·Åp_wakeupChannel ºóÃæ»á³ö´í,Ò»¶¨Òª°´Ë³ĞòÀ´.
+	int m_wakeupFd;//... æ”¾p_wakeupChannel åé¢ä¼šå‡ºé”™,ä¸€å®šè¦æŒ‰é¡ºåºæ¥.
 	std::unique_ptr<Channel> p_wakeupChannel;
 	mutable MutexLock m_mutex;
   bool m_callingPendingFunctors; /* atomic */

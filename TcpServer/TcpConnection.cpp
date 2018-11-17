@@ -64,10 +64,42 @@ void TcpConnection::send(const void* data, int len)
     {
       sendInLoop(data, len);
     }
-    /*else
+    else
     {
-      p_loop->runInLoop(std::bind(&TcpConnection::sendInLoop, this, ))
-    }*/
+      p_loop->runInLoop(std::bind(&TcpConnection::sendInLoop, this, data, len));
+    }
+  }
+}
+
+void TcpConnection::send(const std::string& message)
+{
+  if(m_state == kConnected)
+  {
+    if(p_loop->isInloopThread())
+    {
+      sendInLoop(message.data(), message.size());
+    }
+    else
+    {
+      p_loop->runInLoop(std::bind(&TcpConnection::sendInLoop, this, message.data(), message.size()));
+    }
+  }
+}
+
+void TcpConnection::send(Buffer* message)
+{
+  if(m_state == kConnected)
+  {
+    if(p_loop->isInloopThread())
+    {
+      sendInLoop(message->peek(), message->readableBytes());
+      message->retrieveAll();
+    }
+    else
+    {
+      p_loop->runInLoop(std::bind(&TcpConnection::sendInLoop, this, message->peek(), message->readableBytes()));
+      message->retrieveAll();
+    }
   }
 }
 

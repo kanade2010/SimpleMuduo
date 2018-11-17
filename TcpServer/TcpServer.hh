@@ -23,7 +23,7 @@ public:
   void setMessageCallBack(const NetCallBacks::MessageCallBack& cb) { m_messageCallBack = cb; }
 
 private:
-  const TcpServer operator=(const TcpServer&);
+  TcpServer& operator=(const TcpServer&);
   TcpServer(const TcpServer&);
 
   void newConnetion(int sockfd, const InetAddress& peerAddr);

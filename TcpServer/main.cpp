@@ -29,7 +29,7 @@ void AsyncFlush()
 void onConnection(const TcpConnectionPtr& conn)
 {
   printf("onConnection\n");
-  conn->send("123456789", 10);
+  conn->send("123456789");
 }
 
 void onMessage(const TcpConnectionPtr& conn, Buffer* interBuffer, ssize_t len)
