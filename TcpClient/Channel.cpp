@@ -41,9 +41,18 @@ void Channel::remove()
 
 void Channel::handleEvent()
 {
+  LOG_TRACE << "Channel::handleEvent() ";
   if(m_revents & POLLNVAL)
   {
     LOG_WARN << "Channel::handleEvent() POLLNVAL";
+  }
+
+  if ((m_revents & POLLHUP) && !(m_revents & POLLIN))
+  {
+    if(true){
+      LOG_WARN << "fd = " << m_fd << " Channel::handle_event() POLLHUP";
+    }
+    if (m_closeCallBack) m_closeCallBack();
   }
 
   if(m_revents & (POLLERR | POLLNVAL)){

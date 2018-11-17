@@ -31,6 +31,7 @@ void toIp(char* buf, size_t size,
                    const struct sockaddr* addr);
 int getSocketError(int sockfd);
 struct sockaddr_in6 getLocalAddr(int sockfd);
+struct sockaddr_in6 getPeerAddr(int sockfd);
 void delaySecond(int sec);
 //const struct sockaddr* sockaddr_cast(const struct sockaddr_in* addr)
 //const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);

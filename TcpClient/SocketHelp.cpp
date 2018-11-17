@@ -7,10 +7,10 @@
 #include <assert.h>
 #include <sys/uio.h>  // readv
 
-int sockets::createSocket(sa_family_t family){
+int sockets::createSocket(sa_family_t family){ 
   // Call "socket()" to create a (family) socket of the specified type.
   // But also set it to have the 'close on exec' property (if we can)
-
+	
 	int sock;
 
 	//CLOEXEC，即当调用exec（）函数成功后，文件描述符会自动关闭。
@@ -197,6 +197,18 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
   }
 
   return localaddr;
+}
+
+struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
+{
+  struct sockaddr_in6 peeraddr;
+  bzero(&peeraddr, sizeof peeraddr);
+  socklen_t addrlen = static_cast<socklen_t>(sizeof peeraddr);
+  if (::getpeername(sockfd, (struct sockaddr*)(&peeraddr), &addrlen) < 0)
+  {
+    LOG_SYSERR << "sockets::getPeerAddr";
+  }
+  return peeraddr;
 }
 
 int sockets::getSocketError(int sockfd)
