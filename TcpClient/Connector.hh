@@ -15,7 +15,7 @@ class Connector// : public std::enable_shared_from_this<Connector>
 public:
   typedef std::function<void (int sockfd)> NewConnectionCallBack;
 
-  Connector(EventLoop* loop, const InetAddress& serverAddr);
+  Connector(EventLoop* loop, const InetAddress& serverAddr, bool isUDPConn = false);
   ~Connector();
 
   void setNewConnectionCallBack(const NewConnectionCallBack& cb)
@@ -56,6 +56,7 @@ private:
   std::unique_ptr<Channel> p_channel;
   NewConnectionCallBack m_newConnectionCallBack;
 
+  bool m_isUDPConn;
 };
 
 

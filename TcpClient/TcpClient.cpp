@@ -10,6 +10,7 @@
 TcpClient::TcpClient(EventLoop* loop, const InetAddress& serverAddr)
   :p_loop(loop),
   m_isConnectd(false),
+  m_enRetry(false),
   p_connector(new Connector(loop, serverAddr))
 {
   LOG_TRACE << "ctor[" << this << "]";
@@ -33,6 +34,16 @@ void TcpClient::connect()
   p_connector->start();
 }
 
+void TcpClient::disconnect()
+{
+  {
+    MutexLockGuard lock(m_mutex);
+    if(p_connection)
+    {
+      p_connection->shutdown();
+    }
+  }
+}
 
 void TcpClient::newConnetion(int sockfd)
 {
@@ -75,5 +86,12 @@ void TcpClient::removeConnection(const TcpConnectionPtr& conn)
   }
 
   p_loop->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn));
+
+  if (m_enRetry)
+  {
+    LOG_INFO << "TcpClient::connect[" /*<< m_name*/ << "] - Reconnecting to "
+             ;//<< p_connector->serverAddress().toIpPort();
+    p_connector->restart();
+  }
 
 }

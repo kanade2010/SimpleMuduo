@@ -85,9 +85,18 @@ void sockets::delaySecond(int sec)
   select(0, NULL, NULL, NULL, &tv);
 }
 
-int sockets::createNonblockingOrDie(sa_family_t family)
+int sockets::createNonblockingOrDie(sa_family_t family, bool isUDP)
 {
-  int sockfd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
+  int sockfd;
+  if(!isUDP)
+  {
+    sockfd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
+  }
+  else
+  {
+    sockfd = ::socket(family, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+  }
+  
   if (sockfd < 0)
   {
     LOG_SYSFATAL << "sockets::createNonblockingOrDie";

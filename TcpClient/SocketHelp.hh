@@ -10,7 +10,7 @@ namespace sockets
 /// Creates a non-blocking socket file descriptor,
 /// abort if any error.
 int createSocket(sa_family_t family);
-int createNonblockingOrDie(sa_family_t);
+int createNonblockingOrDie(sa_family_t, bool isUDP = false);
 int  connect(int sockfd, const struct sockaddr* addr);
 void bindOrDie(int sockfd, const struct sockaddr* addr);
 void listenOrDie(int sockfd);

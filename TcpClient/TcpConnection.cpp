@@ -161,6 +161,25 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   }
 }
 
+void TcpConnection::shutdown()
+{
+  if(m_state == kConnected)
+  {
+    setState(kDisConnecting);
+    p_loop->runInLoop(std::bind(&TcpConnection::shutdownInLoop, this));
+  }
+}
+
+void TcpConnection::shutdownInLoop()
+{
+  p_loop->assertInLoopThread();
+  if(!p_channel->isWriting())
+  {
+    p_socket->shutdownWrite();
+  }
+}
+
+
 void TcpConnection::handleRead()
 {
   LOG_TRACE << "TcpConnection::handleRead()";

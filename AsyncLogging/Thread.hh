@@ -6,13 +6,13 @@
 
 class Thread{
 public:
-//typedef void (*ThreadFunc)(void);
 	typedef std::function<void ()> ThreadFunc;
 
 	explicit Thread(const ThreadFunc& threadRoutine);
 	~Thread();
 	void start();
 	void join();
+	bool isStarted() { return m_isRuning; }
 	static void *threadGuide(void *arg);
 	pthread_t getThreadId() const{
 		return m_threadId;

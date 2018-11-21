@@ -47,6 +47,9 @@ public:
   const char* peek() const
   { return begin() + m_readerIndex; }
 
+  const char* beginWrite() const
+  { return begin() + m_writerIndex; }
+
   char* beginWrite()
   { return begin() + m_writerIndex; }
 
@@ -92,6 +95,17 @@ public:
     return result;
   }
 
+  std::string retrieveOneLine()
+  {
+    const char* crlf = std::search(begin() + m_readerIndex, begin() + m_writerIndex, kCRLF, kCRLF+2);
+    
+    if(crlf == beginWrite()) return "";
+
+    std::string result = retrieveAsString(crlf - peek());
+    retrieve(2);
+    return result;
+  }
+
   void makeSpace(int len)
   {
     if(writableBytes() + prependableBytes() < len + kCheapPrepend)
@@ -121,6 +135,10 @@ public:
     hasWritten(len);
   }
 
+  Buffer& operator<<(char v);
+  Buffer& operator<<(const char *);
+  Buffer& operator<<(const std::string& s);
+
   ssize_t readFd(int fd, int* savedErrno);
 
   size_t internalCapacity() const
@@ -129,6 +147,8 @@ public:
   }
 
 private:
+  static const char kCRLF[];
+
   char* begin()
   {return &*m_buffer.begin(); }
 

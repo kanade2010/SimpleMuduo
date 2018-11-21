@@ -37,6 +37,9 @@ public:
   // void send(Buffer&& message); // C++11
   void send(Buffer* message);  // this one will swap data
 
+  void shutdown();
+  void shutdownInLoop();
+
   bool isConnected() const { return m_state == kConnected; }
   bool isDisConnected() const { return m_state == kDisConnected; }
   const char* stateToString() const;

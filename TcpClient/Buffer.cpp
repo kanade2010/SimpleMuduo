@@ -6,6 +6,7 @@
 
 const ssize_t kExtraBufferSize = 20480;
 
+const char Buffer::kCRLF[] = "\r\n";
 const size_t Buffer::kCheapPrepend;
 const size_t Buffer::kInitialSize;
 
@@ -23,6 +24,7 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   // when extrabuf is used, we read 128k-1 bytes at most.
   const int iovcnt = (writable < sizeof extrabuf) ? 2 : 1;
   const ssize_t n = sockets::readv(fd, vec, iovcnt);
+    //printf("Buffer::readFd() : len writable %d len %d capcity %d\n", writable, n - writable, internalCapacity());
   if (n < 0)
   {
     *savedErrno = errno;
@@ -34,7 +36,6 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   else
   {
     m_writerIndex = m_buffer.size();
-    printf("Buffer::readFd() : len writable %d len %d\n", writable, n - writable);
     append(extrabuf, n - writable);
   }
   // if (n == writable + sizeof extrabuf)
@@ -42,6 +43,21 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   //   goto line_30;
   // }
   return n;
+}
+
+Buffer& Buffer::operator<<(char v){
+  append(&v, 1);
+  return *this;
+}
+
+Buffer& Buffer::operator<<(const char *str){
+  append(str, strlen(str));
+  return *this;
+}
+
+Buffer& Buffer::operator<<(const std::string& s){
+  append(s.c_str(), s.size());
+  return *this;
 }
 
 /*

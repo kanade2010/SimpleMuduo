@@ -7,11 +7,12 @@
 
 const int Connector::kMaxRetryDelayMs;
 
-Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
+Connector::Connector(EventLoop* loop, const InetAddress& serverAddr, bool isUDPConn)
   :p_loop(loop),
   m_serverAddr(serverAddr),
   m_state(kDisconnected),
-  m_retryDelayMs(kInitRetryDelayMs)
+  m_retryDelayMs(kInitRetryDelayMs),
+  m_isUDPConn(isUDPConn)
 {
   LOG_DEBUG << "ctor[" << this << "]";
 }
@@ -26,6 +27,14 @@ void Connector::start()
 {
 
   p_loop->runInLoop(std::bind(&Connector::startInLoop, this));
+}
+
+void Connector::restart()
+{
+  p_loop->assertInLoopThread();
+  setState(kDisconnected);
+  m_retryDelayMs = kInitRetryDelayMs;
+  startInLoop();
 }
 
 void Connector::startInLoop()
@@ -55,7 +64,7 @@ void Connector::stopInLoop()
 
 void Connector::connect()
 {
-  int sockfd = sockets::createNonblockingOrDie(m_serverAddr.family());
+  int sockfd = sockets::createNonblockingOrDie(m_serverAddr.family(), m_isUDPConn);
   int ret = sockets::connect(sockfd, m_serverAddr.getSockAddr());
   int savedErrno = (ret == 0) ? 0 : errno;
 
