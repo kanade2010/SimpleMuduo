@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "Logger.hh"
 #include "EventLoop.hh"
 #include "EventLoopThread.hh"
 
@@ -33,9 +34,12 @@ EventLoop* EventLoopThread::startLoop()
     MutexLockGuard lock(m_mutex);
     while(p_loop == NULL)
     {
+      LOG_TRACE << "EventLoopThread::startLoop() wait()";
       m_cond.wait();
     }
   }
+
+  LOG_TRACE << "EventLoopThread::startLoop() wakeup";
 
   return p_loop;
 }
@@ -45,7 +49,7 @@ void EventLoopThread::threadFunc()
 {
   EventLoop loop;
 
-  if(m_threadInitCallBack) 
+  if(m_threadInitCallBack)
   {
     m_threadInitCallBack(&loop);
   }
@@ -54,6 +58,7 @@ void EventLoopThread::threadFunc()
     MutexLockGuard lock(m_mutex);
     p_loop = &loop;
     m_cond.notify();
+    LOG_TRACE << "EventLoopThread::threadFunc() notify()";
   }
 
   loop.loop();

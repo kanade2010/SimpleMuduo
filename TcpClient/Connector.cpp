@@ -64,6 +64,7 @@ void Connector::stopInLoop()
 
 void Connector::connect()
 {
+  LOG_TRACE << "Connector::connect()";
   int sockfd = sockets::createNonblockingOrDie(m_serverAddr.family(), m_isUDPConn);
   int ret = sockets::connect(sockfd, m_serverAddr.getSockAddr());
   int savedErrno = (ret == 0) ? 0 : errno;

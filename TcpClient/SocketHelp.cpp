@@ -7,10 +7,10 @@
 #include <assert.h>
 #include <sys/uio.h>  // readv
 
-int sockets::createSocket(sa_family_t family){ 
+int sockets::createSocket(sa_family_t family){
   // Call "socket()" to create a (family) socket of the specified type.
   // But also set it to have the 'close on exec' property (if we can)
-	
+
 	int sock;
 
 	//CLOEXEC，即当调用exec（）函数成功后，文件描述符会自动关闭。
@@ -96,7 +96,7 @@ int sockets::createNonblockingOrDie(sa_family_t family, bool isUDP)
   {
     sockfd = ::socket(family, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
   }
-  
+
   if (sockfd < 0)
   {
     LOG_SYSFATAL << "sockets::createNonblockingOrDie";
@@ -200,7 +200,7 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
   struct sockaddr_in6 localaddr;
   ::bzero(&localaddr, sizeof localaddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
-  if(::getsockname(sockfd, (struct sockaddr*)(&localaddr), &addrlen) < 0)
+  if(::getsockname(sockfd, reinterpret_cast<struct sockaddr*>(&localaddr), &addrlen) < 0)
   {
     LOG_SYSERR << "sockets::getLocalAddr";
   }
@@ -213,7 +213,7 @@ struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
   struct sockaddr_in6 peeraddr;
   bzero(&peeraddr, sizeof peeraddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof peeraddr);
-  if (::getpeername(sockfd, (struct sockaddr*)(&peeraddr), &addrlen) < 0)
+  if (::getpeername(sockfd, reinterpret_cast<struct sockaddr*>(&peeraddr), &addrlen) < 0)
   {
     LOG_SYSERR << "sockets::getPeerAddr";
   }
@@ -234,6 +234,18 @@ int sockets::getSocketError(int sockfd)
   {
     return optval;
   }
+}
+
+int sockets::getSocketType(int sockfd)
+{
+  int optval;
+  socklen_t optlen = static_cast<socklen_t>(sizeof optval);
+  if(::getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &optval, &optlen) < 0)
+  {
+    LOG_SYSERR << "sockets::getSocketType";
+  }
+
+  return optval;
 }
 
 /*
