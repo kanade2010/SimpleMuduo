@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "Thread.hh"
 
 Thread::Thread(const ThreadFunc& threadRoutine)
@@ -39,18 +38,3 @@ void Thread::start()
   p_thread.reset(new std::thread(m_threadRoutine));
   m_isStarted = true;
 }
-
-
-/*void testfun()
-{
-  printf("testfun\n");
-}
-
-int main()
-{
-  Thread t(testfun);
-  getchar();
-  t.start();
-  printf("%d\n", t.getThreadId());
-  getchar();
-}/*

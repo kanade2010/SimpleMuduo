@@ -4,6 +4,7 @@
 #include <thread>
 #include <functional>
 #include <memory>
+#include <assert.h>
 
 class Thread{
 public:
