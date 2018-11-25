@@ -1,9 +1,12 @@
 #include "Thread.hh"
-#include "MutexLock.hh"
 
+#include <iostream>
 #include <chrono>
-#include<condition_variable>
+#include <condition_variable>
 #include "Condition.hh"
+#include "ThreadPool.hh"
+#include "CurrentThread.hh"
+#include "Logger.hh"
 
 /*int g_sum = 0;
 
@@ -47,7 +50,7 @@ int main()
 
   getchar();
 }*/
-
+/*
 std::mutex g_mutex;
 
 int main()
@@ -60,5 +63,75 @@ int main()
 
   return 0;
 }
+*/
+/*
+int main()
+{
+  {
+  ThreadPool threadPool;
+  threadPool.start();
+
+  getchar();
+  }
+
+  getchar();
+
+  return 0;
+}
+
+*/
+
+std::mutex g_mutex;
+
+void priorityFunc()
+{
+  for (int i = 1; i < 4; ++i)
+  {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::lock_guard<std::mutex> lock(g_mutex);
+      LOG_DEBUG << "priorityFunc() [" << i << "] at thread [ " << CurrentThread::tid() << "] output";// << std::endl;
+  }
+
+}
+
+void testFunc()
+{
+  // loop to print character after a random period of time
+  for (int i = 1; i < 4; ++i)
+  {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::lock_guard<std::mutex> lock(g_mutex);
+      LOG_DEBUG << "testFunc() [" << i << "] at thread [ " << CurrentThread::tid() << "] output";// << std::endl;
+  }
+
+}
 
 
+void testFunc2(int s)
+{
+  // loop to print character after a random period of time
+  for (int i = 1; i < 4; ++i)
+  {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::lock_guard<std::mutex> lock(g_mutex);
+      LOG_DEBUG << "testFunc() [" << i << "] at thread [ " << CurrentThread::tid() << "] output";// << std::endl;
+  }
+
+}
+
+int main()
+{
+  ThreadPool threadPool;
+  threadPool.start();
+
+  for(int i = 0; i < 5 ; i++)
+    threadPool.addTask(testFunc);
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  threadPool.addTask(std::bind(&testFunc2, 5));
+  threadPool.addTask(ThreadPool::TaskPair(ThreadPool::level0, priorityFunc));
+
+  getchar();
+  return 0;
+}

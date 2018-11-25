@@ -1,62 +1,36 @@
-//Condition.cpp
-
+#include <chrono>
 #include "Condition.hh"
-#include <time.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
 
-#define CHECK(exp) \
-	if(!exp) \
-{ \
-	fprintf(stderr, "Error/(%s, %d):[" #exp "] check error, abort.\n", __FILE__, __LINE__); abort();\
+Condition::Condition(std::mutex &mutex)
+  :m_mutex(mutex)
+{
 }
 
-Condition::Condition(MutexLock &mutex):m_mutex(mutex){
-	CHECK(!pthread_cond_init(&m_cond, NULL));
+Condition::~Condition()
+{
 }
 
-Condition::~Condition(){
-	CHECK(!pthread_cond_destroy(&m_cond));
+void Condition::wait(std::unique_lock<std::mutex>& lock)
+{
+  m_cond.wait(lock);
 }
 
-void Condition::wait(){
-	//VERIFY(m_mutex.isLocking());
-	CHECK(!pthread_cond_wait(&m_cond, m_mutex.getMutexPtr()));
-	//m_mutex.restoreMutexStatus();
+void Condition::waitForSeconds(double seconds)
+{
+  const int64_t kNanoSecondsPerSecond = 1000000000;
+  int64_t nanoseconds = static_cast<int64_t>(seconds * kNanoSecondsPerSecond);
+
+  std::unique_lock<std::mutex> lock(m_mutex);
+  m_cond.wait_for(lock, std::chrono::nanoseconds(nanoseconds));
 }
 
-// returns true if time out, false otherwise.
-bool Condition::waitForSeconds(double seconds){
-	struct timespec abstime;
-	// FIXME: use CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW to prevent time rewind.
-	clock_gettime(CLOCK_REALTIME, &abstime);
-
-	const int64_t kNanoSecondsPerSecond = 1000000000;
-	int64_t nanoseconds = static_cast<int64_t>(seconds * kNanoSecondsPerSecond);
-
-	abstime.tv_sec += static_cast<time_t>((abstime.tv_nsec + nanoseconds) / kNanoSecondsPerSecond);
-	abstime.tv_nsec = static_cast<long>((abstime.tv_nsec + nanoseconds) % kNanoSecondsPerSecond);
-
-	return ETIMEDOUT == pthread_cond_timedwait(&m_cond, m_mutex.getMutexPtr(), &abstime);
+void Condition::notify()
+{
+  m_cond.notify_one();
 }
 
-void Condition::notify(){
-	CHECK(!pthread_cond_signal(&m_cond));
+void Condition::notifyAll()
+{
+  m_cond.notify_all();
 }
-
-void Condition::notifyAll(){
-	CHECK(!pthread_cond_broadcast(&m_cond));
-}
-
-
-
-
-
-
-
-
-
-
 

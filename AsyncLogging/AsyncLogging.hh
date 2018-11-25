@@ -1,12 +1,14 @@
 #ifndef _ASYNC_LOGGING_HH
 #define _ASYNC_LOGGING_HH
-#include "MutexLock.hh"
+
+#include <memory>
+#include <mutex>
+#include <string>
+
 #include "Thread.hh"
 #include "LogStream.hh"
 #include "ptr_vector.hh"
 #include "Condition.hh"
-#include <memory>
-#include <string>
 
 class AsyncLogging
 {
@@ -42,7 +44,7 @@ private:
 	off_t m_rollSize;
 	std::string m_filePath;
 	Thread m_thread;
-	MutexLock m_mutex;
+	std::mutex m_mutex;
 	Condition m_cond;
 
 	BufferPtr m_currentBuffer;

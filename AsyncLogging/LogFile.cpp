@@ -9,7 +9,7 @@
 LogFile::LogFile(const std::string& filePath, off_t rollSize, bool threadSafe, int flushInterval)
 	:m_filePath(filePath),
 	 m_roolSize(rollSize),
-	 m_mutex(threadSafe ? new MutexLock : NULL),
+	 m_mutex(threadSafe ? new std::mutex : NULL),
 	 m_rollCnt(-1),
 	 m_flushInterval(flushInterval),
 	 m_file(new FileUtil::AppendFile(m_filePath)){
@@ -21,7 +21,7 @@ LogFile::~LogFile(){
 
 void LogFile::append(const char* logline, int len){
 	if(m_mutex.get()){
-		MutexLockGuard lock(*m_mutex);
+		std::lock_guard<std::mutex> lock(*m_mutex);
 		append_unlocked(logline, len);
 	}
 	else{
@@ -39,7 +39,7 @@ void LogFile::append_unlocked(const char* logline, int len){
 
 void LogFile::flush(){
 	if(m_mutex.get()){
-		MutexLockGuard lock(*m_mutex);
+		std::lock_guard<std::mutex> lock(*m_mutex);
 		m_file->flush();
 	}
 	else{

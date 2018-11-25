@@ -22,13 +22,13 @@ AsyncLogging::~AsyncLogging(){
 }
 
 void AsyncLogging::append(const char* logline, int len){
-	MutexLockGuard lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	if(m_currentBuffer->avail() > len){
 		m_currentBuffer->append(logline, len);
 	}
 	else{
 		m_buffers.push_back(m_currentBuffer.release());
-		
+
 		if(m_nextBuffer){
 			m_currentBuffer = std::move(m_nextBuffer);
 		}
@@ -52,7 +52,7 @@ void AsyncLogging::threadRoutine(){
 	while(m_isRunning){
 		assert(buffersToWrite.empty());
 		{
-			MutexLockGuard lock(m_mutex);
+			std::lock_guard<std::mutex> lock(m_mutex);
 			if(m_buffers.empty()){
 				m_cond.waitForSeconds(m_flushInterval);
 			}

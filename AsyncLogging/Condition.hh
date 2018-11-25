@@ -1,22 +1,23 @@
 #ifndef _CONDITION_HH
 #define _CONDITION_HH
-#include "MutexLock.hh"
-#include <pthread.h>
+
+#include <mutex>
+#include <condition_variable>
 
 class Condition{
 public:
-	explicit Condition(MutexLock &mutex);
-	~Condition();
-	void wait();//pthread_cond_wait
-	bool waitForSeconds(double seconds);//pthread_cond_timedwait
-	void notify();//pthread_cond_signal
-	void notifyAll();//pthread_cond_broadcast
+  explicit Condition(std::mutex &mutex);
+  ~Condition();
+  void wait(std::unique_lock<std::mutex>& lock);
+  void waitForSeconds(double seconds);
+  void notify();
+  void notifyAll();
 private:
-	Condition(const Condition&);
-	Condition& operator=(const Condition&);
+  Condition(const Condition&);
+  const Condition& operator=(const Condition&);
 
-	MutexLock &m_mutex;
-	pthread_cond_t m_cond;
+  std::mutex &m_mutex;
+  std::condition_variable m_cond;
 };
 
 #endif

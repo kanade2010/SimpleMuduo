@@ -1,8 +1,8 @@
 #ifndef _LOG_FILE_HH
 #define _LOG_FILE_HH
 #include <string>
+#include <mutex>
 #include "scoped_ptr.hh"
-#include "MutexLock.hh"
 
 namespace FileUtil{
 	class AppendFile;
@@ -27,10 +27,10 @@ private:
 
 	const std::string m_filePath;
 	const int m_flushInterval;
-	
+
 	int m_rollCnt;
 	off_t m_roolSize;
-	scoped_ptr<MutexLock> m_mutex;
+	scoped_ptr<std::mutex> m_mutex;
 	scoped_ptr<FileUtil::AppendFile> m_file;
 };
 
