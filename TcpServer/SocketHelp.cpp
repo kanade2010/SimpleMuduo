@@ -191,7 +191,7 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
   struct sockaddr_in6 localaddr;
   ::bzero(&localaddr, sizeof localaddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
-  if(::getsockname(sockfd, (struct sockaddr*)(&localaddr), &addrlen) < 0)
+  if(::getsockname(sockfd, reinterpret_cast<struct sockaddr*>(&localaddr), &addrlen) < 0)
   {
     LOG_SYSERR << "sockets::getLocalAddr";
   }
@@ -204,7 +204,7 @@ struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
   struct sockaddr_in6 peeraddr;
   bzero(&peeraddr, sizeof peeraddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof peeraddr);
-  if (::getpeername(sockfd, (struct sockaddr*)(&peeraddr), &addrlen) < 0)
+  if (::getpeername(sockfd, reinterpret_cast<struct sockaddr*>(&peeraddr), &addrlen) < 0)
   {
     LOG_SYSERR << "sockets::getPeerAddr";
   }

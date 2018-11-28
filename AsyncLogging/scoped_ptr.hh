@@ -34,14 +34,16 @@ public:
 		m_ptr = p;
 	}
 
-	T* get(){
+	T* get() const {
 		return m_ptr;
 	}
+
+	operator bool() const { get() != NULL; }
 
 private://将拷贝构造和赋值  以及判等判不等  都设置为私有方法
 	//对象不再能调用，即不能拷贝构造和赋值  也就达到了不让转移拥有权的目的
 	scoped_ptr(const scoped_ptr<T> &y);
-	scoped_ptr<T> operator=(const scoped_ptr<T> &);
+	const scoped_ptr<T> operator=(const scoped_ptr<T> &);
 	void operator==(scoped_ptr<T> const &) const;
 	void operator!=(scoped_ptr<T> const &) const;
 

@@ -47,6 +47,9 @@ public:
   const char* peek() const
   { return begin() + m_readerIndex; }
 
+  const char* beginWrite() const
+  { return begin() + m_writerIndex; }
+
   char* beginWrite()
   { return begin() + m_writerIndex; }
 

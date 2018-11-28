@@ -20,7 +20,7 @@ LogFile::~LogFile(){
 }
 
 void LogFile::append(const char* logline, int len){
-	if(m_mutex.get()){
+	if(m_mutex){
 		std::lock_guard<std::mutex> lock(*m_mutex);
 		append_unlocked(logline, len);
 	}
@@ -38,7 +38,7 @@ void LogFile::append_unlocked(const char* logline, int len){
 }
 
 void LogFile::flush(){
-	if(m_mutex.get()){
+	if(m_mutex){
 		std::lock_guard<std::mutex> lock(*m_mutex);
 		m_file->flush();
 	}

@@ -23,6 +23,7 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   // when extrabuf is used, we read 128k-1 bytes at most.
   const int iovcnt = (writable < sizeof extrabuf) ? 2 : 1;
   const ssize_t n = sockets::readv(fd, vec, iovcnt);
+    //printf("Buffer::readFd() : len writable %d len %d capcity %d\n", writable, n - writable, internalCapacity());
   if (n < 0)
   {
     *savedErrno = errno;
@@ -34,7 +35,6 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   else
   {
     m_writerIndex = m_buffer.size();
-    printf("Buffer::readFd() : len writable %d len %d\n", writable, n - writable);
     append(extrabuf, n - writable);
   }
   // if (n == writable + sizeof extrabuf)

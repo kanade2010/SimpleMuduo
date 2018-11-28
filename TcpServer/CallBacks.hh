@@ -17,7 +17,7 @@ namespace NetCallBacks
 
 typedef std::function<void()> TimerCallBack;
 typedef std::function<void(const TcpConnectionPtr& )> ConnectionCallBack;
-typedef std::function<void(const TcpConnectionPtr& , Buffer* Buffer, ssize_t )> MessageCallBack;
+typedef std::function<void(const TcpConnectionPtr& , Buffer*, ssize_t )> MessageCallBack;
 typedef std::function<void(const TcpConnectionPtr& )> CloseCallBack;
 
 void defaultConnectionCallback();

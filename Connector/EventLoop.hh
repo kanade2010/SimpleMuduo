@@ -4,13 +4,13 @@
 #include <memory>
 #include <vector>
 #include <functional>
+#include <mutex>
 
 #include "TimerId.hh"
 #include "TimeStamp.hh"
 #include "TimerQueue.hh"
 #include "CallBacks.hh"
 #include "CurrentThread.hh"
-#include "MutexLock.hh"
 #include "Channel.hh"
 
 class Poller;
@@ -73,7 +73,7 @@ private:
 
 	int m_wakeupFd;//... 放p_wakeupChannel 后面会出错,一定要按顺序来.
 	std::unique_ptr<Channel> p_wakeupChannel;
-	mutable MutexLock m_mutex;
+	mutable std::mutex m_mutex;
   bool m_callingPendingFunctors; /* atomic */
   std::vector<Functor> m_pendingFunctors; // @GuardedBy mutex_
 

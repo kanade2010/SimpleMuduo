@@ -106,7 +106,7 @@ void EventLoop::queueInLoop(const Functor& cb)
 {
   LOG_TRACE << "EventLoop::queueInLoop()";
   {
-    MutexLockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_pendingFunctors.push_back(std::move(cb));
   }
 
@@ -144,7 +144,7 @@ void EventLoop::doPendingFunctors()
   m_callingPendingFunctors = true;
 
   {
-    MutexLockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     functors.swap(m_pendingFunctors);
   }
 
