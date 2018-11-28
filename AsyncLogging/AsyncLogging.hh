@@ -13,7 +13,7 @@
 class AsyncLogging
 {
 public:
-	AsyncLogging(const std::string filePath, off_t rollSize, int flushInterval = 3);
+	AsyncLogging(const std::string filePath, off_t rollSize, double flushInterval = 3.0);
 	~AsyncLogging();
 
 	void start(){
@@ -39,7 +39,7 @@ private:
 	typedef myself::ptr_vector<Buffer> BufferVector;
 	typedef std::unique_ptr<Buffer> BufferPtr;
 
-	const int m_flushInterval;
+	const double m_flushInterval;
 	bool m_isRunning;
 	off_t m_rollSize;
 	std::string m_filePath;

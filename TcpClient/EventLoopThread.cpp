@@ -9,7 +9,7 @@ EventLoopThread::EventLoopThread()
   m_exiting(false),
   m_thread(std::bind(&EventLoopThread::threadFunc, this)),
   m_mutex(),
-  m_cond(m_mutex)
+  m_cond()
 {
 
 }

@@ -6,7 +6,7 @@
 
 ThreadPool::ThreadPool()
   :m_mutex(),
-  m_cond(m_mutex),
+  m_cond(),
   m_isStarted(false)
 {
 

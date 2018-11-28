@@ -3,14 +3,14 @@
 #include <assert.h>
 #include <stdio.h>
 
-AsyncLogging::AsyncLogging(const std::string filePath, off_t rollSize, int flushInterval)
+AsyncLogging::AsyncLogging(const std::string filePath, off_t rollSize, double flushInterval)
 	:m_filePath(filePath),
 	 m_rollSize(rollSize),
 	 m_flushInterval(flushInterval),
 	 m_isRunning(false),
 	 m_thread(std::bind(&AsyncLogging::threadRoutine, this)),
 	 m_mutex(),
-	 m_cond(m_mutex),
+	 m_cond(),
 	 m_currentBuffer(new Buffer),
 	 m_nextBuffer(new Buffer),
 	 m_buffers()
@@ -52,9 +52,9 @@ void AsyncLogging::threadRoutine(){
 	while(m_isRunning){
 		assert(buffersToWrite.empty());
 		{
-			std::lock_guard<std::mutex> lock(m_mutex);
+			std::unique_lock<std::mutex> lock(m_mutex);
 			if(m_buffers.empty()){
-				m_cond.waitForSeconds(m_flushInterval);
+				m_cond.waitForSeconds(lock, m_flushInterval);
 			}
 			m_buffers.push_back(m_currentBuffer.release());
 			m_currentBuffer = std::move(backupBuffer1);
