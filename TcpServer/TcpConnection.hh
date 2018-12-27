@@ -32,13 +32,13 @@ public:
   void connectDestroyed();  // should be called only once
 
   // void send(string&& message); // C++11
-  void send(const void* message, int len);
+  void send(const void* message, size_t len);
   void send(const std::string& message);
   // void send(Buffer&& message); // C++11
   void send(Buffer* message);  // this one will swap data
 
   void shutdown();
-  void shutdownInLoop();
+  void forceClose();
 
   bool isConnected() const { return m_state == kConnected; }
   bool isDisConnected() const { return m_state == kDisConnected; }
@@ -53,6 +53,8 @@ private:
   void handleError();
   void handleClose();
   void sendInLoop(const void* data, size_t len);
+  void shutdownInLoop();
+  void forceCloseInLoop();
 
   EventLoop* p_loop;
   std::string m_name;

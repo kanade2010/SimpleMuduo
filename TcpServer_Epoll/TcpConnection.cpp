@@ -117,7 +117,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   }
 
   //if nothing in output Buffer, try writing directly.
-  if(p_channel->isWriting() && m_outputBuffer.readableBytes() == 0)
+  if(!p_channel->isWriting() && m_outputBuffer.readableBytes() == 0)
   {
     nwrote = sockets::write(p_channel->fd(), data, len);
     if(nwrote >= 0)
